@@ -7,7 +7,7 @@ import Modal from '../components/Modal'
 import CustomInput from '../components/Input';
 import CustomTextarea from '../components/Textarea';
 import { toast } from 'react-toastify';
-
+import { useSearchParams, useRouter } from 'next/navigation';
 
 type Blog = {
     id: number;
@@ -29,6 +29,26 @@ export default function Book() {
     const [idUpdate, setIdUpdate] = useState<number | null>(null);
 
     const [titleDelete, setTitleDelete] = useState("");
+
+    const searchParams = useSearchParams();
+    const router = useRouter();
+
+    const [inputValue, setInputValue] = useState("");
+    const searchKeyword = searchParams.get('search') || "";
+
+    const handleSearch = () => {
+        const params = new URLSearchParams();
+        if (inputValue.trim()) {
+            params.set('search', inputValue);
+        } else {
+            params.delete('search');
+        }
+        router.push(`?${params.toString()}`);
+    };
+    const filteredData = data.filter(blog =>
+        blog.title.toLowerCase().includes(searchKeyword.toLowerCase()) ||
+        blog.content.toLowerCase().includes(searchKeyword.toLowerCase())
+    );
 
     const handleSubmit = async () => {
         const formData = {
@@ -149,12 +169,25 @@ export default function Book() {
 
     return (
         <div className="container mx-auto px-4 py-8">
-            <Button className='mb-3'>Trở lại</Button>
+            <Button className='mb-3' onClick={() => router.back()}>Trở lại</Button>
             <div className='flex justify-between'>
                 <h1 className="text-4xl font-bold mb-6">Danh sách Blogs</h1>
                 <h1 className="text-4xl font-bold mb-6">
                     <Button color='primary' onClick={() => setIsOpenModal(true)}>Thêm Mới</Button>
                 </h1>
+            </div>
+            <div className="flex w-full mb-4">
+                <div className="flex-grow">
+                    <CustomInput
+                        placeholder="Tìm kiếm blog..."
+                        value={inputValue}
+                        onChange={(e) => setInputValue(e.target.value)}
+                        className="rounded-r-none"
+                    />
+                </div>
+                <Button className="rounded-l-none h-10" onClick={handleSearch}>
+                    Tìm
+                </Button>
             </div>
             <table className="min-w-full bg-white shadow-md">
                 <thead className="bg-red-300">
@@ -178,7 +211,7 @@ export default function Book() {
                 </thead>
 
                 <tbody className="">
-                    {data.map((value, index) => (
+                    {filteredData.map((value, index) => (
                         <tr
                             key={value.id}
                         >
